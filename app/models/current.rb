@@ -1,5 +1,5 @@
 class Current < ActiveSupport::CurrentAttributes
-  attribute :session, :user, :request
+  attribute :session, :user, :request, :account
 
   delegate :host, :protocol, to: :request, prefix: true, allow_nil: true
 
@@ -12,6 +12,6 @@ class Current < ActiveSupport::CurrentAttributes
   end
 
   def account
-    Account.first
+    super || (self.account = Account.first)
   end
 end
