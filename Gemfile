@@ -13,6 +13,7 @@ gem "redis", "~> 5.4"
 
 # Deployment
 gem "puma", "~> 7.2", ">= 7.2.1"
+gem "falcon", "~> 0.57"
 
 # Jobs
 gem "resque", "~> 2.7.0"

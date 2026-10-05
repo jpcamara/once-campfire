@@ -69,7 +69,10 @@ Rails.application.configure do
   config.active_support.report_deprecations = false
 
   # Cache in memory for now
-  config.cache_store = :redis_cache_store
+  config.cache_store = :redis_cache_store, { compress: false }
+
+  # Masked CSRF tokens make every HTML page's body, and so its digest, unique: a body ETag never matches.
+  config.middleware.delete Rack::ETag
 
   # Assets are cacheable
   config.public_file_server.headers = {
