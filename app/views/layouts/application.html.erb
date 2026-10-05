@@ -21,10 +21,10 @@
     <%= tag.link rel: "icon", href: fresh_account_logo_path, type: "image/png" %>
     <%= tag.link rel: "apple-touch-icon", href: fresh_account_logo_path %>
 
-    <%= stylesheet_link_tag :all, "data-turbo-track": "reload" %>
+    <%= rendered_once(:stylesheets) { stylesheet_link_tag :all, "data-turbo-track": "reload" } %>
     <%= custom_styles_tag %>
 
-    <%= javascript_importmap_tags %>
+    <%= rendered_once(:importmap) { javascript_importmap_tags } %>
 
     <%= yield :head %>
   </head>
