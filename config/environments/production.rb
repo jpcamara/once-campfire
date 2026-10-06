@@ -75,7 +75,7 @@ Rails.application.configure do
   config.action_controller.cache_store = FragmentCacheStore.new(compress: false)
 
   # Pages carry no CSRF tokens, so a page's body repeats until what it shows changes: keep its gzip
-  # instead of having Thruster compress it on every request. Rack::ETag stays, as in the stock app.
+  # instead of compressing it on every request. Rack::ETag stays, as in the stock app.
   config.middleware.insert_before 0, GzipCache
 
   # Assets are cacheable

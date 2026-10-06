@@ -3,12 +3,12 @@ require "zlib"
 
 # Gzips the HTML and JSON a GET returns once per distinct body, and serves the kept bytes from then on.
 #
-# Pages render the same until what they show changes, so the same body goes out again and again;
-# Thruster would compress it on every request. The compressed form is kept under a digest of the
-# body (not the ETag, which for some pages is made from records rather than the bytes). Writes and
-# public responses, which Thruster caches itself, are left to Thruster. The headers are
-# Rack::Deflater's, which the stock app uses. An app that already knows its body's digest (a kept
-# response's ETag) hands it over in env[DIGEST] instead.
+# Pages render the same until what they show changes, so the same body goes out again and again, and
+# Rack::Deflater (in config.ru, as in the stock app) would compress it on every request. This sits
+# inside it: it hands Deflater these responses already compressed, with the headers Deflater gives
+# them, and Deflater compresses everything else as before. The compressed form is kept under a digest
+# of the body (not the ETag, which for some pages is made from records rather than the bytes). An app
+# that already knows its body's digest (a kept response's ETag) hands it over in env[DIGEST] instead.
 class GzipCache
   DIGEST = "campfire.body_digest"
   COMPRESSIBLE = %r{\A(text/html|text/vnd\.turbo-stream\.html|application/json)\b}
@@ -33,9 +33,10 @@ class GzipCache
       gzipped = kept(key) || keep(key, Zlib.gzip(content).freeze)
     end
 
+    vary = headers["vary"].to_s.split(",").map(&:strip)
+    headers["vary"] = vary.push("Accept-Encoding").join(",") unless vary.any? { |v| v == "*" || v.casecmp?("accept-encoding") }
     headers["content-encoding"] = "gzip"
-    headers["content-length"] = gzipped.bytesize.to_s
-    headers["vary"] = [ headers["vary"], "Accept-Encoding" ].compact.join(",")
+    headers.delete("content-length")
     [ status, headers, [ gzipped ] ]
   end
 
