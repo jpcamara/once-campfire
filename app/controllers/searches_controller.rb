@@ -1,10 +1,14 @@
 class SearchesController < ApplicationController
-  before_action :set_messages
+  include KeptResponses
 
   def index
-    @query = query if query.present?
-    @recent_searches = Current.user.searches.ordered
-    @return_to_room = last_room_visited
+    render_kept(cookies[:last_room]) do
+      set_messages
+      @query = query if query.present?
+      @recent_searches = Current.user.searches.ordered
+      @return_to_room = last_room_visited
+      render
+    end
   end
 
   def create

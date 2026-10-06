@@ -1,4 +1,6 @@
 class RoomsController < ApplicationController
+  include KeptResponses
+
   before_action :set_room, only: %i[ show destroy ]
   before_action :ensure_can_administer, only: %i[ destroy ]
   before_action :remember_last_room_visited, only: :show
@@ -8,7 +10,10 @@ class RoomsController < ApplicationController
   end
 
   def show
-    @messages = find_messages
+    render_kept do
+      @messages = find_messages
+      render
+    end
   end
 
   def destroy

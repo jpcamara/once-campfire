@@ -1,5 +1,5 @@
 class MessagesController < ApplicationController
-  include ActiveStorage::SetCurrent, RoomScoped
+  include ActiveStorage::SetCurrent, RoomScoped, KeptResponses
 
   before_action :set_room, except: :create
   before_action :set_message, only: %i[ show edit update destroy ]
@@ -8,12 +8,15 @@ class MessagesController < ApplicationController
   layout false, only: :index
 
   def index
-    @messages = find_paged_messages
+    render_kept do
+      @messages = find_paged_messages
 
-    if @messages.any?
-      fresh_when @messages
-    else
-      head :no_content
+      if @messages.any?
+        fresh_when @messages
+        render unless performed?
+      else
+        head :no_content
+      end
     end
   end
 
