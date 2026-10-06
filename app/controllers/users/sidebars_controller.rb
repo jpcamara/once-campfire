@@ -1,11 +1,16 @@
 class Users::SidebarsController < ApplicationController
   DIRECT_PLACEHOLDERS = 20
 
-  def show
-    @direct_memberships, @other_memberships = Current.user.memberships.visible.with_ordered_room.partition { |membership| membership.room.direct? }
-    @direct_memberships = @direct_memberships.sort_by { |membership| membership.room.updated_at }.reverse
+  include KeptResponses
 
-    @direct_placeholder_users = find_direct_placeholder_users
+  def show
+    render_kept do
+      @direct_memberships, @other_memberships = Current.user.memberships.visible.with_ordered_room.partition { |membership| membership.room.direct? }
+      @direct_memberships = @direct_memberships.sort_by { |membership| membership.room.updated_at }.reverse
+
+      @direct_placeholder_users = find_direct_placeholder_users
+      render
+    end
   end
 
   private

@@ -7,8 +7,10 @@ require "zlib"
 # Thruster would compress it on every request. The compressed form is kept under a digest of the
 # body (not the ETag, which for some pages is made from records rather than the bytes). Writes and
 # public responses, which Thruster caches itself, are left to Thruster. The headers are
-# Rack::Deflater's, which the stock app uses.
+# Rack::Deflater's, which the stock app uses. An app that already knows its body's digest (a kept
+# response's ETag) hands it over in env[DIGEST] instead.
 class GzipCache
+  DIGEST = "campfire.body_digest"
   COMPRESSIBLE = %r{\A(text/html|text/vnd\.turbo-stream\.html|application/json)\b}
 
   def initialize(app, max_bytes: 64 * 1024 * 1024)
@@ -23,9 +25,13 @@ class GzipCache
     status, headers, body = response = @app.call(env)
     return response unless compress?(env, status, headers)
 
-    content = read(body)
-    key = Digest::MD5.digest(content) << headers["content-type"]
-    gzipped = @mutex.synchronize { @entries[key] } || keep(key, Zlib.gzip(content).freeze)
+    if (digest = env[DIGEST]) && (gzipped = kept("#{digest} #{headers["content-type"]}"))
+      body.close if body.respond_to?(:close)
+    else
+      content = read(body)
+      key = "#{digest || Digest::MD5.digest(content)} #{headers["content-type"]}"
+      gzipped = kept(key) || keep(key, Zlib.gzip(content).freeze)
+    end
 
     headers["content-encoding"] = "gzip"
     headers["content-length"] = gzipped.bytesize.to_s
@@ -46,6 +52,10 @@ class GzipCache
       content
     ensure
       body.close if body.respond_to?(:close)
+    end
+
+    def kept(key)
+      @mutex.synchronize { @entries[key] }
     end
 
     def keep(key, gzipped)
