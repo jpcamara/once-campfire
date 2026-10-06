@@ -10,6 +10,10 @@ module Campfire
     config.load_defaults 8.2
     config.active_support.isolation_level = :fiber
 
+    # Falcon's request bodies can't be rewound, and the bot API reads the raw body after Rack has
+    # parsed it as a form. Puma's can.
+    config.middleware.insert_before 0, Rack::RewindableInput::Middleware
+
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
