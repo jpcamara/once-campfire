@@ -10,8 +10,10 @@ class WebPush::Pool
   end
 
   def queue(payload, subscriptions)
+    badges = Hash.new { |counts, user| counts[user] = user.memberships.unread.count }
+
     subscriptions.find_each do |subscription|
-      deliver_later(payload, subscription)
+      deliver_later(payload.merge(badge: badges[subscription.user]), subscription)
     end
   end
 

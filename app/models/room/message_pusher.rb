@@ -42,19 +42,22 @@ class Room::MessagePusher
     end
 
     def push_to_users_involved_in_mentions(payload)
-      enqueue_payload_for_delivery payload, push_subscriptions_for_mentionable_users(message.mentionees)
+      if (mentionee_ids = message.mentionees.ids).any?
+        enqueue_payload_for_delivery payload, push_subscriptions_for_mentionable_users(mentionee_ids)
+      end
     end
 
     def push_subscriptions_for_users_involved_in_everything
       relevant_subscriptions.merge(Membership.involved_in_everything)
     end
 
-    def push_subscriptions_for_mentionable_users(mentionees)
-      relevant_subscriptions.merge(Membership.involved_in_mentions).where(user_id: mentionees.ids)
+    def push_subscriptions_for_mentionable_users(mentionee_ids)
+      relevant_subscriptions.merge(Membership.involved_in_mentions).where(user_id: mentionee_ids)
     end
 
     def relevant_subscriptions
       Push::Subscription
+        .includes(:user)
         .joins(user: :memberships)
         .merge(Membership.visible.disconnected.where(room: room).where.not(user: message.creator))
     end
