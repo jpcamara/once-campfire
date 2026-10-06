@@ -2,6 +2,7 @@ require "active_support/core_ext/integer/time"
 require "active_support/core_ext/numeric/bytes"
 require_relative "../../lib/rails_ext/log_scrubbing_formatter"
 require_relative "../../lib/rails_ext/fragment_cache_store"
+require_relative "../../lib/rails_ext/gzip_cache"
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
@@ -73,8 +74,9 @@ Rails.application.configure do
   config.cache_store = :redis_cache_store, { compress: false }
   config.action_controller.cache_store = FragmentCacheStore.new(compress: false)
 
-  # Masked CSRF tokens make every HTML page's body, and so its digest, unique: a body ETag never matches.
-  config.middleware.delete Rack::ETag
+  # Pages carry no CSRF tokens, so a page's body repeats until what it shows changes: keep its gzip
+  # instead of having Thruster compress it on every request. Rack::ETag stays, as in the stock app.
+  config.middleware.insert_before 0, GzipCache
 
   # Assets are cacheable
   config.public_file_server.headers = {
