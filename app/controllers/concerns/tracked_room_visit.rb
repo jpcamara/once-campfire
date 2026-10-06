@@ -6,7 +6,7 @@ module TrackedRoomVisit
   end
 
   def remember_last_room_visited
-    cookies.permanent[:last_room] = @room.id
+    cookies.permanent[:last_room] = @room.id unless cookies[:last_room] == @room.id.to_s
   end
 
   def last_room_visited

@@ -62,9 +62,12 @@ module Authentication
       end
     end
 
+    # The session_token cookie is signed again only when the session's activity is refreshed (hourly),
+    # which keeps rolling its 20-year expiry without writing it on every request.
     def resume_session(session)
-      session.resume user_agent: request.user_agent, ip_address: request.remote_ip
-      authenticated_as session
+      refreshed = session.resume(user_agent: request.user_agent, ip_address: request.remote_ip)
+      authenticated_as session, cookie: refreshed
+      session
     end
 
     def terminate_current_session
@@ -80,10 +83,10 @@ module Authentication
       Rails.logger.warn "Could not disconnect remote connections on sign out: #{error.class}"
     end
 
-    def authenticated_as(session)
+    def authenticated_as(session, cookie: true)
       Current.session = session
       set_authenticated_by(:session)
-      set_authentication_cookie(session)
+      set_authentication_cookie(session) if cookie
     end
 
     def post_authenticating_url
