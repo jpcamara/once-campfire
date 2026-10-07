@@ -92,5 +92,7 @@ module ReadCache
   end
 end
 
-ActiveSupport.on_load(:active_record_sqlite3adapter) { prepend ReadCache::Adapter }
-Rails.application.executor.to_run { ReadCache.check_for_commits }
+unless Rails.configuration.x.rust_caching_only
+  ActiveSupport.on_load(:active_record_sqlite3adapter) { prepend ReadCache::Adapter }
+  Rails.application.executor.to_run { ReadCache.check_for_commits }
+end

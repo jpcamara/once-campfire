@@ -10,6 +10,13 @@ module Campfire
     config.load_defaults 8.2
     config.active_support.isolation_level = :fiber
 
+    # CAMPFIRE_CACHING=rust keeps only the caches the Rust port has: message fragments (Rails'
+    # fragment cache and its per-process copy), gzip kept by body digest, Thruster's public-response
+    # cache, prepared statements and static assets. It turns off the ones only the Elixir port has:
+    # the cross-request read cache and the kept sidebar and messages pages. It's for measuring how
+    # much those are worth.
+    config.x.rust_caching_only = ENV["CAMPFIRE_CACHING"] == "rust"
+
     # Falcon's request bodies can't be rewound, and the bot API reads the raw body after Rack has
     # parsed it as a form. Puma's can.
     config.middleware.insert_before 0, Rack::RewindableInput::Middleware

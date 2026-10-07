@@ -64,7 +64,7 @@ module KeptResponses
     end
 
     def render_kept_under(key)
-      if !flash.empty?
+      if !flash.empty? || Rails.configuration.x.rust_caching_only
         yield
       elsif (kept = STORE[key]) && !CHECK
         serve_kept(kept)
