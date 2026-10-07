@@ -19,17 +19,38 @@ Sinatra repo.
 
 ## Performance
 
-Requests/sec with 16 clients, four hardware threads per app, on a Hetzner Ryzen 7 PRO 8700GE.
-The harness is DHH's `bench/run`, with YJIT and jemalloc on. These are the latest A/B numbers; a
-final run of all three apps together will replace them.
+Final run, Oct 7 2026: DHH's `bench/run` on a Hetzner Ryzen 7 PRO 8700GE. Each app gets four
+hardware threads and the load generator four others. YJIT and jemalloc are on. The numbers are
+medians of 3 runs in rotating order, measured alongside the other implementations and stock
+Rails, with 0 errors.
 
-| HTTP workload (requests/sec) | Rails (stock) | Rails (optimized) |
+| Workload | Rails (stock) | Rails (optimized) |
 |---|---:|---:|
-| Room page | 223 | 523 |
-| Messages page | 371 | 2,017 |
-| Sidebar | 475 | 3,615 |
-| Search | 377 | 859 |
-| Post a message | 199 | 270 |
+| Room page (req/s, 16 clients) | 225 | 538 |
+| Messages page | 364 | 2,003 |
+| Sidebar | 482 | 3,578 |
+| Search | 378 | 872 |
+| Post a message | 198 | 258 |
+| Avatar | 62,491 | 62,420 |
+| Action Cable, 1,000 clients: p50 delivery | 42.8 ms | 40.1 ms |
+| Action Cable, 1,000 clients: saturated | 13 msg/s | 12 msg/s |
+| Upload + thumbnail (505 KB) | 67 ms | 66 ms |
+| Idle memory (anon) | 284 MB | 613 MB |
+| Cold start | 3.6 s | 5.9 s |
+
+Idle memory is higher because this runs 4 Falcon processes against stock's 3 Puma workers, plus per-process caches.
+
+**Room-page reads while posts arrive** (reads/sec at 16 clients, the median of 3 reps, each on a
+fresh seed). The read routes above never see a write, so this shows what the caches do under real
+traffic:
+
+| Posts/sec in the background | 0 | 20 | 100 |
+|---|---:|---:|---:|
+| Rails (stock) | 228 | 214 | 194 |
+| Rails (optimized) | 537 | 430 | 208 |
+
+The per-change table below comes from the A/B run for each step. Each step was measured against
+the commit just before it, so the percentages don't multiply exactly into the totals.
 
 **Where the gains come from.** Each change was measured with an A/B against the commit before it.
 
