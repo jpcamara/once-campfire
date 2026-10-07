@@ -6,7 +6,7 @@ without changing its behavior. That's checked with the Playwright parity harness
 stock are the ones the Rust port documents in its README under "Known differences". The work is on
 the `perf` branch.
 
-It's one of three Ruby implementations benchmarked together. The benchmark notes, harness changes,
+It's one of four Ruby implementations benchmarked together. The benchmark notes, harness changes,
 per-change measurements and raw results are on the
 [`benchmarks` branch](https://github.com/jpcamara/once-campfire-sinatra/tree/benchmarks) of the
 Sinatra repo.
@@ -16,6 +16,7 @@ Sinatra repo.
 | Rails, optimized | this fork, branch `perf` |
 | Sinatra + Falcon | [jpcamara/once-campfire-sinatra](https://github.com/jpcamara/once-campfire-sinatra) |
 | Rage + Sequel | [jpcamara/once-campfire-rage](https://github.com/jpcamara/once-campfire-rage) |
+| Roda + Sequel (Falcon) | [jpcamara/once-campfire-roda](https://github.com/jpcamara/once-campfire-roda) |
 
 ## Performance
 
