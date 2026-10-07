@@ -59,6 +59,7 @@ module ReadCache
         @mutex.synchronize do
           if @connection_pid != Process.pid
             @connection = SQLite3::Database.new(ActiveRecord::Base.connection_db_config.database)
+            @connection.busy_timeout = 5_000
             @connection_pid = Process.pid
           end
           @connection.get_first_value("PRAGMA data_version")
