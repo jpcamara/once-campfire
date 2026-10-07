@@ -8,15 +8,13 @@ class MessagesController < ApplicationController
   layout false, only: :index
 
   def index
-    render_kept do
-      @messages = find_paged_messages
+    @messages = find_paged_messages
 
-      if @messages.any?
-        fresh_when @messages
-        render unless performed?
-      else
-        head :no_content
-      end
+    if @messages.any?
+      fresh_when @messages
+      render_kept_for_etag { render } unless performed?
+    else
+      head :no_content
     end
   end
 

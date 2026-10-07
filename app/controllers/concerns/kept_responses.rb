@@ -1,13 +1,19 @@
-# Keeps an action's finished response until the database changes, and serves it to requests with
-# the same inputs instead of rendering again.
+# Keeps an action's finished response and serves it to requests with the same inputs instead of
+# rendering again. Two keys, each with a counterpart in the Elixir port (basecamp/once-campfire-elixir):
 #
-# Before-actions (authentication, cookies) still run on every request; only the render is skipped.
-# The key is ReadCache.generation, which moves whenever any connection commits, plus everything else
-# a page reads from the request: the user, the URL, the format, the Turbo frame, the user agent and
-# what the action passes in. Responses with a flash aren't kept. The kept response carries the
-# headers the block set (content type, the stylesheets' Link header, fresh_when's validators), and
-# otherwise the ETag Rack::ETag would compute from the body; Rack::ConditionalGet still answers
-# revalidations with 304s. GzipCache gets the body's digest, so a kept page is compressed once.
+# - render_kept: until the database changes. ReadCache.generation moves whenever any connection
+#   commits. Elixir keeps the sidebar's HTML until one of the tables it reads changes
+#   (lib/campfire/sidebar.ex); this is the same, invalidated by any table.
+# - render_kept_for_etag: by the ETag fresh_when computed for this request, as Elixir keeps the
+#   messages page per ETag (lib/campfire/messages.ex). The validators still run on every request;
+#   an equal ETag means the same records at the same versions through the same template.
+#
+# Both also key on everything else a page reads from the request: the user, the URL, the format, the
+# Turbo frame and the user agent. Before-actions (authentication, cookies) run on every request; only
+# the render is skipped. Responses with a flash aren't kept. A kept response carries the headers the
+# block set (content type, the stylesheets' Link header, fresh_when's validators), and otherwise the
+# ETag Rack::ETag would compute from the body; Rack::ConditionalGet still answers revalidations with
+# 304s. GzipCache gets the body's digest, so a kept page is compressed once.
 #
 # With CAMPFIRE_CHECK_CACHES=1 every hit renders anyway and logs any difference from what was kept.
 module KeptResponses
@@ -44,10 +50,20 @@ module KeptResponses
   STORE = Store.new(128 * 1024 * 1024)
 
   private
-    def render_kept(*inputs)
-      key = [ controller_path, action_name, ReadCache.generation, Current.user&.id, request.base_url,
-        request.fullpath, request.format.to_s, request.headers["Turbo-Frame"], request.user_agent, *inputs ]
+    def render_kept(*inputs, &)
+      render_kept_under(request_inputs(ReadCache.generation, *inputs), &)
+    end
 
+    def render_kept_for_etag(&)
+      render_kept_under(request_inputs(response.etag), &)
+    end
+
+    def request_inputs(*inputs)
+      [ controller_path, action_name, Current.user&.id, request.base_url, request.fullpath, request.format.to_s,
+        request.headers["Turbo-Frame"], request.user_agent, *inputs ]
+    end
+
+    def render_kept_under(key)
       if !flash.empty?
         yield
       elsif (kept = STORE[key]) && !CHECK
