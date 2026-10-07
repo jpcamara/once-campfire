@@ -1,4 +1,4 @@
-require "digest/md5"
+require "digest/sha2"
 require "zlib"
 
 # Gzips the HTML and JSON a GET returns once per distinct body, and serves the kept bytes from then on.
@@ -29,7 +29,7 @@ class GzipCache
       body.close if body.respond_to?(:close)
     else
       content = read(body)
-      key = "#{digest || Digest::MD5.digest(content)} #{headers["content-type"]}"
+      key = "#{digest || Digest::SHA256.digest(content)} #{headers["content-type"]}"
       gzipped = kept(key) || keep(key, Zlib.gzip(content).freeze)
     end
 
