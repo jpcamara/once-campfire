@@ -3,6 +3,8 @@ class Users::SidebarsController < ApplicationController
 
   include KeptResponses
 
+  # Kept until the database changes, as the Elixir port keeps the sidebar's HTML until a table it
+  # reads changes (lib/campfire/sidebar.ex).
   def show
     render_kept do
       @direct_memberships, @other_memberships = Current.user.memberships.visible.with_ordered_room.partition { |membership| membership.room.direct? }
