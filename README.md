@@ -1,4 +1,14 @@
-# Campfire, optimized (fork)
+# Campfire, optimized (fork) — retired
+
+**Retired Oct 10, 2026.** Upstream [basecamp/once-campfire](https://github.com/basecamp/once-campfire)
+now does this job and more: it keeps finished pages until the database changes and uses header-only
+CSRF and content-keyed fragments. Use upstream for current Rails numbers. On DHH's verification harness on the same Hetzner box, upstream `0aa339d`
+did 3,189 / 3,206 / 3,568 / 3,450 / 282 requests/sec (room / messages / sidebar / search / post).
+The full comparison is in
+[notes/upstream-bench.md](https://github.com/jpcamara/once-campfire-sinatra/blob/benchmarks/notes/upstream-bench.md)
+on the Sinatra repo's `benchmarks` branch.
+
+This branch stays as a record of the work. Everything below describes the fork as it was on Oct 8.
 
 This fork of [once-campfire](https://github.com/basecamp/once-campfire) makes the Rails app faster
 without changing its behavior. That's checked with the Playwright parity harness from DHH's
